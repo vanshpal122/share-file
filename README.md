@@ -16,7 +16,7 @@ This is a file transfer system built using **Spring Boot** that allows users to 
 - Spring Web
 - Spring Security (planned)
 - Socket Programming (or REST APIs)
-- Thymeleaf (optional for frontend)
+- Thymeleaf (considering for frontend)
 
 ## 📅 Timeline
 | Phase | Status |
