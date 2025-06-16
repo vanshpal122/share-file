@@ -11,7 +11,7 @@ This is a file transfer system built using **Spring Boot** that allows users to 
 - Minimal web UI to interact with the system
 
 ## 🛠 Tech Stack
-- Java 17
+- Java 24
 - Spring Boot
 - Spring Web
 - Spring Security (planned)
