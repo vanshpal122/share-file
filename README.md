@@ -15,7 +15,7 @@ This is a file transfer system built using **Spring Boot** that allows users to 
 - Spring Boot
 - Spring Web
 - Spring Security (planned)
-- Socket Programming (or REST APIs)
+- Socket Programming
 - Thymeleaf (considering for frontend)
 
 ## 📅 Timeline
@@ -23,6 +23,7 @@ This is a file transfer system built using **Spring Boot** that allows users to 
 |-------|--------|
 | Project Setup | ✅ Done |
 | Basic File Upload/Download | 🔄 In Progress |
+| STOMP Web Socket | ⏳ Planned |
 | Authentication Layer | ⏳ Planned |
 | UI Integration | ⏳ Planned |
 | Testing & Documentation | ⏳ Planned |
