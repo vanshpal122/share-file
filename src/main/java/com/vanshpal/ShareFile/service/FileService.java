@@ -1,11 +1,9 @@
 package com.vanshpal.ShareFile.service;
 
 
+import com.vanshpal.ShareFile.service.HelperClasses.FileChunk;
+import com.vanshpal.ShareFile.service.HelperClasses.StoredFile;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.net.URI;
 
 @Service
 public class FileService {
@@ -17,9 +15,11 @@ public class FileService {
         this.localFileStorageService = localFileStorageService;
     }
 
-    public URI storeFile(MultipartFile file) throws IOException {
-        URI storedPath;
-        storedPath = localFileStorageService.storeFile(file.getInputStream(), file.getOriginalFilename());
-        return storedPath;
+    public String storeFileChunk(FileChunk chunk) {
+        return localFileStorageService.storeChunk(chunk);
+    }
+
+    public String storeFile(StoredFile file) {
+        return localFileStorageService.mergeFileChunks(file);
     }
 }
