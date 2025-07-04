@@ -73,11 +73,8 @@ public class LocalFileStorageService {
         }
 
         if (Files.exists(newFilePath)) {
-            String fileName = newFile.fileName();
-            int extensionIndex = fileName.lastIndexOf('.');
-            String ex = (extensionIndex == -1) ? "" : fileName.substring(extensionIndex);
-            String newFileName = (extensionIndex == -1) ? fileName: fileName.substring(0, extensionIndex);
-            newFilePath = deviceFileDirectory.resolve(Paths.get(newFileName + newFile.ID() + ex)).normalize().toAbsolutePath();
+            String changedFileName = appendToFileNameRespectingExtension(newFile.fileName(), newFile.ID() + "");
+            newFilePath = deviceFileDirectory.resolve(Paths.get(changedFileName)).normalize().toAbsolutePath();
         }
 
         //Accessing corresponding chunk directory
