@@ -120,6 +120,13 @@ public class LocalFileStorageService {
         return newFilePath.relativize(this.mainPath).toString();
     }
 
+    public static String appendToFileNameRespectingExtension(String originalFileName, String textToAppend) {
+        int extensionIndex = originalFileName.lastIndexOf('.');
+        String ex = (extensionIndex == -1) ? "" : originalFileName.substring(extensionIndex);
+        String fileNameWithoutExtension = (extensionIndex == -1) ? originalFileName: originalFileName.substring(0, extensionIndex);
+        return (fileNameWithoutExtension + textToAppend + ex);
+    }
+
     private void deleteTempDirectory(Path dirPath) {
         try (Stream<Path> files = Files.walk(dirPath)) { //main folder will also get deleted(i.e. deviceID)
             files.sorted(Comparator.reverseOrder()) // delete children before parents
