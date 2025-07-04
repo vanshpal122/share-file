@@ -113,7 +113,7 @@ public class LocalFileStorageService {
                     throw new StorageException("Error while writing chunk" + chunk.getName() + "of file" + newFile.fileName());
                 }
             }
-            deleteTempDirectory(this.tempPath.resolve(Paths.get(newFile.deviceID() + "")));
+            deleteDirectory(this.tempPath.resolve(Paths.get(newFile.deviceID() + "")));
         } catch (IOException e) {
             throw new StorageException("Error while merging chunks: " + newFile.fileName() + newFile.ID(), e);
         }
