@@ -127,7 +127,10 @@ public class LocalFileStorageService {
         return (fileNameWithoutExtension + textToAppend + ex);
     }
 
-    private void deleteTempDirectory(Path dirPath) {
+    public static void deleteDirectory(Path dirPath) {
+        if(Files.notExists(dirPath)) {
+            return;
+        }
         try (Stream<Path> files = Files.walk(dirPath)) { //main folder will also get deleted(i.e. deviceID)
             files.sorted(Comparator.reverseOrder()) // delete children before parents
                     .forEach(path -> {
