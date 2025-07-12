@@ -14,6 +14,7 @@ This is a file transfer system built using **Spring Boot** that allows users to 
 - Java 24
 - Spring Boot
 - Spring Web
+- H2 Database
 - Spring Security (planned)
 - Socket Programming
 - Thymeleaf (considering for frontend)
@@ -22,8 +23,8 @@ This is a file transfer system built using **Spring Boot** that allows users to 
 | Phase | Status |
 |-------|--------|
 | Project Setup | ✅ Done |
-| Basic File Upload/Download | 🔄 In Progress |
-| STOMP Web Socket | ⏳ Planned |
+| Basic File Upload/Download | ✅ Done |
+| Redis Message Broker | ⏳ Planned |
 | Authentication Layer | ⏳ Planned |
 | UI Integration | ⏳ Planned |
 | Testing & Documentation | ⏳ Planned |
