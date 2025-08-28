@@ -24,7 +24,7 @@ This is a file transfer system built using **Spring Boot** that allows users to 
 |-------|--------|
 | Project Setup | ✅ Done |
 | Basic File Upload/Download | ✅ Done |
-| Redis Message Broker | ⏳ Planned |
+| WebSocket | STOMP | ⏳ Planned |
 | Authentication Layer | ⏳ Planned |
 | UI Integration | ⏳ Planned |
 | Testing & Documentation | ⏳ Planned |
