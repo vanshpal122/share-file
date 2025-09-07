@@ -15,6 +15,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 @Service
@@ -29,59 +30,42 @@ public class LocalFileStorageService {
         this.mainPath = storageProperties.getFinalLocation();
     }
 
-    public Path storeChunk(FileChunk chunk) throws StorageException {
-        if (chunk.file().isEmpty()) {
-            throw new StorageException("Empty Chunk Received");
-        }
+    public FileChunk storeChunk(int chunkIndex, String fileId, InputStream fileStream) throws StorageException, IOException {
+        if (fileId == null) {
+            fileId = UUID.randomUUID().toString();
+        } else if (!isValidFileId(fileId)) throw new StorageException("Invalid file ID");
         Path deviceFileDirectory = tempPath
-                .resolve(chunk.deviceID() + "")
-                .resolve(chunk.fileID() + "");
+                .resolve(fileId);
+
+        if (!deviceFileDirectory.startsWith(this.tempPath.normalize().toAbsolutePath())) {
+            throw new StorageException("Invalid File ID");
+        }
         try {
             Files.createDirectories(deviceFileDirectory);
         } catch (IOException e) {
             throw new StorageException("Could not create directory");
         }
-        Path newFile = deviceFileDirectory.resolve(Paths.get(chunk.chunkIndex() + "")).normalize().toAbsolutePath();
+        Path newFile = deviceFileDirectory.resolve(Paths.get(chunkIndex + "")).normalize().toAbsolutePath();
         if (!newFile.startsWith(this.tempPath.normalize().toAbsolutePath())) {
             throw new StorageException("Chunk Files must be within the temp directory");
         }
 
-        try (InputStream inputStream = chunk.file().getInputStream()) {
-            Files.copy(inputStream, newFile, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new StorageException("Error while storing chunk: " + chunk.chunkIndex() + "in file" + chunk.fileID(), e);
-        }
-        return tempPath.relativize(newFile);
+        Files.copy(fileStream, newFile, StandardCopyOption.REPLACE_EXISTING);
+        return new FileChunk(chunkIndex, fileId);
     }
 
-    public StoredFile mergeFileChunks(StoredFile newFile) throws StorageException {
-        Path deviceFileDirectory = this.mainPath.resolve(Paths.get(newFile.getDeviceName())).normalize().toAbsolutePath();
-
-        //Security Check
-        if (!deviceFileDirectory.startsWith(this.mainPath.normalize().toAbsolutePath())) {
-            throw new StorageException("Device Folder must be within the main directory");
-        }
-        //Creating new directory
-        try {
-            Files.createDirectories(deviceFileDirectory);
-        } catch (IOException e) {
-            throw new StorageException("Could not create directory for completed file");
-        }
-
+    public StoredFile mergeFileChunks(String fileName, String fileId, int totalNumberOfChunks) throws StorageException {
+        StoredFile newFile = new StoredFile(fileName, "", null, 0L, null);
         //Creating file
-        Path newFilePath = deviceFileDirectory.resolve(Paths.get(newFile.getOriginalFileName())).normalize().toAbsolutePath();
-        if (!newFilePath.startsWith(deviceFileDirectory)) {
+        if (!isValidFileId(fileId)) throw new StorageException("Invalid file ID");
+        String newFileName = fileId + extractFileExtension(fileName);
+        Path newFilePath = this.mainPath.resolve(newFileName).normalize().toAbsolutePath();
+        if (!newFilePath.startsWith(this.tempPath.normalize().toAbsolutePath())) {
             throw new StorageException("New Files must be within the corresponding device directory");
         }
-
-        if (Files.exists(newFilePath)) {
-            String changedFileName = appendToFileNameRespectingExtension(newFile.getOriginalFileName(), newFile.getID() + "");
-            newFile.setStoredFileName(changedFileName);
-            newFilePath = deviceFileDirectory.resolve(Paths.get(changedFileName)).normalize().toAbsolutePath();
-        }
-
+        newFile.setStoredFileName(newFileName);
         //Accessing corresponding chunk directory
-        Path dirPath = tempPath.resolve(newFile.getDeviceID() + "").resolve(newFile.getID() + "");
+        Path dirPath = tempPath.resolve(fileId);
 
         File dir = dirPath.toFile();
         if (!dir.exists() || !dir.isDirectory()) {
@@ -96,7 +80,7 @@ public class LocalFileStorageService {
 
         int actualChunkCount = chunkFiles.length;
 
-        if (!(actualChunkCount == newFile.getNumberOfChunks())) {
+        if (!(actualChunkCount == totalNumberOfChunks)) {
             throw new StorageException("Invalid Number of Chunks");
         }
         Arrays.sort(chunkFiles, Comparator.comparingInt(f -> Integer.parseInt(f.getName())));
@@ -113,15 +97,13 @@ public class LocalFileStorageService {
                     }
 
                 } catch (IOException e) {
-                    throw new StorageException("Error while writing chunk" + chunk.getName() + "of file with id" + newFile.getID(), e);
+                    throw new StorageException("Error while writing chunk" + chunk.getName() + "of file with id" + fileId, e);
                 }
             }
-            deleteDirectory(this.tempPath.resolve(Paths.get(newFile.getDeviceID() + "")));
+            deleteDirectory(this.tempPath.resolve(Paths.get(fileId)));
         } catch (IOException e) {
-            throw new StorageException("Error while merging chunks: " + newFile.getID(), e);
+            throw new StorageException("Error while merging chunks: " + fileId, e);
         }
-        newFile.setFileRelativePath(mainPath.relativize(newFilePath).toString());
-        newFile.setID(null);
         try {
             newFile.setFileSize(Files.size(newFilePath));
             newFile.setFileType(Files.probeContentType(newFilePath));
@@ -136,10 +118,10 @@ public class LocalFileStorageService {
         return new FileSystemResource(this.mainPath.resolve(filePath));
     }
 
-    public Resource getSplitFileByRange(Path filePath, long startByte, long endByte, long fileId) {
+    public Resource getSplitFileByRange(Path filePath, long startByte, long endByte) {
         checkFile(filePath);
 
-        Path outputFilePath = this.tempPath.resolve(Paths.get(String.valueOf(fileId)));
+        Path outputFilePath = this.tempPath.resolve(Paths.get(String.valueOf(UUID.randomUUID())));
 
         try (RandomAccessFile file = new RandomAccessFile(this.mainPath.resolve(filePath).toFile(), "r");
              FileOutputStream outputStream = new FileOutputStream(outputFilePath.toFile())) {
@@ -164,8 +146,25 @@ public class LocalFileStorageService {
         }
     }
 
+
+    public static boolean isValidFileId(String fileId) {
+        if (fileId == null || fileId.trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            // Try to parse the string as a UUID, if it fails, return false
+            UUID.fromString(fileId); // If this succeeds, it's a valid UUID
+            return true;
+        } catch (IllegalArgumentException e) {
+            // Invalid UUID format, return false
+            return false;
+        }
+    }
+
+
     private void checkFile(Path filePath) {
-        if(filePath == null) {
+        if (filePath == null) {
             throw new StorageException("Invalid file path");
         }
 
@@ -174,24 +173,22 @@ public class LocalFileStorageService {
         if (!file.startsWith(this.mainPath.normalize().toAbsolutePath())) {
             throw new StorageException("File Should be in the main directory");
         }
-        if(Files.notExists(this.mainPath.resolve(filePath)) && !Files.isReadable(this.mainPath.resolve(filePath))) {
+        if (Files.notExists(this.mainPath.resolve(filePath)) && !Files.isReadable(this.mainPath.resolve(filePath))) {
             throw new StorageException("File Not Found");
         }
     }
 
 
-    public static String appendToFileNameRespectingExtension(String originalFileName, String textToAppend) {
+    public static String extractFileExtension(String originalFileName) {
         int extensionIndex = originalFileName.lastIndexOf('.');
-        String ex = (extensionIndex == -1) ? "" : originalFileName.substring(extensionIndex);
-        String fileNameWithoutExtension = (extensionIndex == -1) ? originalFileName : originalFileName.substring(0, extensionIndex);
-        return (fileNameWithoutExtension + textToAppend + ex);
+        return (extensionIndex == -1) ? "" : originalFileName.substring(extensionIndex);
     }
 
     public static void deleteDirectory(Path dirPath) {
         if (Files.notExists(dirPath)) {
             return;
         }
-        try (Stream<Path> files = Files.walk(dirPath)) { //main folder will also get deleted(i.e. deviceID)
+        try (Stream<Path> files = Files.walk(dirPath)) { //main folder will also get deleted(i.e. sessionID)
             files.sorted(Comparator.reverseOrder()) // delete children before parents
                     .forEach(path -> {
                         try {

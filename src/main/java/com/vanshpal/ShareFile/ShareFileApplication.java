@@ -10,5 +10,4 @@ public class ShareFileApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(ShareFileApplication.class, args);
 	}
-
 }

@@ -12,13 +12,9 @@ import org.springframework.data.annotation.Id;
 @Setter
 @AllArgsConstructor
 public class StoredFile {
-        String originalFileName;
-        String storedFileName;
-        String deviceName;
-        @Id Long ID;
-        Long deviceID;
-        int numberOfChunks;
-        String fileRelativePath;
-        Long fileSize;
-        String fileType;
+    String originalFileName;
+    String storedFileName;
+    @Id Long ID;
+    Long fileSize;
+    String fileType;
 }

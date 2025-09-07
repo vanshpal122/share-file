@@ -17,7 +17,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,10 +60,10 @@ public class ShareFileController {
         }
 
         //suffix-range
+        long suffixOffset = Long.parseLong(range.substring(idx + 1));
         if (idx == 0) {
             try {
-                long offset = Long.parseLong(range.substring(idx + 1));
-                return offset > 0;
+                return suffixOffset > 0;
             } catch (NumberFormatException e) {
                 return false;
             }
@@ -79,8 +78,7 @@ public class ShareFileController {
             //int-range
             try {
                 long start = Long.parseLong(range.substring(0, idx));
-                long end = Long.parseLong(range.substring(idx + 1));
-                return (start >= 0 && end >= 0 && start <= end);
+                return (start >= 0 && suffixOffset >= 0 && start <= suffixOffset);
             } catch (NumberFormatException e) {
                 return false;
             }
@@ -90,19 +88,17 @@ public class ShareFileController {
     @PostMapping("/upload")
     public ResponseEntity<Map<String, String>> storeFile(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("fileID") Long fileID,
-            @RequestParam("deviceID") Long deviceID,
-            @RequestParam("deviceName") String deviceName, //check if two have same name
             @RequestParam("chunkIndex") int chunkIndex,
+            @RequestParam(value = "fileId", required = false) String fileID,
             @RequestParam("isLastChunk") boolean isLastChunk,
             @RequestParam("totalNumberOfChunks") int totalNumberOfChunks,
             UriComponentsBuilder ucb,
             HttpServletRequest request
     ) {
-        Path chunkPath = fileService.storeFileChunk(new FileChunk(chunkIndex, fileID, deviceID, file));
+        FileChunk fileChunk = fileService.storeFileChunk(chunkIndex, fileID, file);
         if (isLastChunk) {
             StoredFile storedFile = fileService
-                    .storeFile(new StoredFile(file.getOriginalFilename(), file.getOriginalFilename(), deviceName, fileID, deviceID, totalNumberOfChunks, null, null, null));
+                    .storeFile(file.getOriginalFilename(), fileChunk.fileID(), totalNumberOfChunks);
             String downloadURL = ServletUriComponentsBuilder
                     .fromRequestUri(request)
                     .replacePath("shareFile/download/" + storedFile.getID())
@@ -114,7 +110,7 @@ public class ShareFileController {
             response.put("fileType", file.getContentType());
             return ResponseEntity.created(URI.create(downloadURL)).body(response);
         } else {
-            URI locationOfChunk = ucb.path(chunkPath.toString()).buildAndExpand(chunkIndex).toUri();
+            URI locationOfChunk = ucb.path(fileChunk.fileID()).buildAndExpand(chunkIndex).toUri();
             return ResponseEntity.created(locationOfChunk).build();
         }
     }

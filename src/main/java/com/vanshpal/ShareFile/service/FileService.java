@@ -7,8 +7,10 @@ import com.vanshpal.ShareFile.service.HelperClasses.FileChunk;
 import com.vanshpal.ShareFile.service.HelperClasses.StoredFile;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Path;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.Optional;
 
@@ -24,12 +26,21 @@ public class FileService {
         this.fileShareRepository = fileShareRepository;
     }
 
-    public Path storeFileChunk(FileChunk chunk) {
-        return localFileStorageService.storeChunk(chunk);
+    public FileChunk storeFileChunk(int chunkIndex, String fileId, MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new StorageException("Empty Chunk Received");
+        }
+        FileChunk fileChunk;
+        try (InputStream inputStream = file.getInputStream()) {
+            fileChunk = localFileStorageService.storeChunk(chunkIndex, fileId, inputStream);
+        } catch (IOException e) {
+            throw new StorageException("Error while storing chunk: " + chunkIndex + "in file" + fileId, e);
+        }
+        return fileChunk;
     }
 
-    public StoredFile storeFile(StoredFile file) {
-        StoredFile newFile = localFileStorageService.mergeFileChunks(file);
+    public StoredFile storeFile(String fileName, String fileId, int totalNumberOfChunks) {
+        StoredFile newFile = localFileStorageService.mergeFileChunks(fileName, fileId, totalNumberOfChunks);
         return fileShareRepository.save(newFile);
     }
 
@@ -39,11 +50,11 @@ public class FileService {
 
     public Resource getFile(Long fileId) {
         Optional<StoredFile> storedFile = fileShareRepository.findById(fileId);
-        return storedFile.map(file -> localFileStorageService.getFile(Paths.get(file.getFileRelativePath()))).orElse(null);
+        return storedFile.map(file -> localFileStorageService.getFile(Paths.get(file.getStoredFileName()))).orElse(null);
     }
 
     public Resource getFilePart(Long fileId, long start, long end) {
         Optional<StoredFile> storedFile = fileShareRepository.findById(fileId);
-        return storedFile.map(file -> localFileStorageService.getSplitFileByRange(Paths.get(file.getFileRelativePath()), start, end, fileId)).orElse(null);
+        return storedFile.map(file -> localFileStorageService.getSplitFileByRange(Paths.get(file.getStoredFileName()), start, end)).orElse(null);
     }
 }
