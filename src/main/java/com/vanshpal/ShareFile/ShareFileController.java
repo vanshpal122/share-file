@@ -158,6 +158,7 @@ public class ShareFileController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.status(isRange ? HttpStatus.PARTIAL_CONTENT : HttpStatus.OK)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getOriginalFileName() + "\"")
                 .header(HttpHeaders.CONTENT_TYPE, file.getFileType())
                 .header(HttpHeaders.ACCEPT_RANGES, "bytes")
                 .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength))

@@ -60,7 +60,7 @@ public class LocalFileStorageService {
         if (!isValidFileId(fileId)) throw new StorageException("Invalid file ID");
         String newFileName = fileId + extractFileExtension(fileName);
         Path newFilePath = this.mainPath.resolve(newFileName).normalize().toAbsolutePath();
-        if (!newFilePath.startsWith(this.tempPath.normalize().toAbsolutePath())) {
+        if (!newFilePath.startsWith(this.mainPath.normalize().toAbsolutePath())) {
             throw new StorageException("New Files must be within the corresponding device directory");
         }
         newFile.setStoredFileName(newFileName);
@@ -86,6 +86,11 @@ public class LocalFileStorageService {
         Arrays.sort(chunkFiles, Comparator.comparingInt(f -> Integer.parseInt(f.getName())));
 
 
+        try {
+            Files.createDirectories(newFilePath.getParent());
+        } catch (IOException e) {
+            throw new StorageException("Could not create directory");
+        }
         //Actual Merging
         try (BufferedOutputStream mergedOut = new BufferedOutputStream(Files.newOutputStream(newFilePath))) {
             for (File chunk : chunkFiles) {
