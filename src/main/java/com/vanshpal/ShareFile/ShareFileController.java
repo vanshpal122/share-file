@@ -6,6 +6,7 @@ import com.vanshpal.ShareFile.service.FileService;
 import com.vanshpal.ShareFile.service.HelperClasses.ByteRange;
 import com.vanshpal.ShareFile.service.HelperClasses.FileChunk;
 import com.vanshpal.ShareFile.service.HelperClasses.StoredFile;
+import com.vanshpal.ShareFile.service.StompEventListener;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -19,15 +20,18 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 @RestController
 @RequestMapping("/shareFile")
 public class ShareFileController {
     private final FileService fileService;
+    private final StompEventListener stompEventListener;
 
-    public ShareFileController(FileService fileService) {
+    public ShareFileController(FileService fileService, StompEventListener stompEventListener) {
         this.fileService = fileService;
+        this.stompEventListener = stompEventListener;
     }
 
     private ByteRange checkRangeSatisfiable(String range, long fileLength) {
@@ -164,6 +168,17 @@ public class ShareFileController {
                 .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength))
                 .header(HttpHeaders.CONTENT_RANGE, "bytes" + " " + rangeStart + "-" + rangeEnd + "/" + file.getFileSize())
                 .body(resource);
+    }
+
+
+    @GetMapping("/getReceivers")
+    public Set<String> getReceivers() {
+        return stompEventListener.getSubscribers("/topic/receive");
+    }
+
+    @GetMapping("/ping")
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("Server is online");
     }
 
     @ExceptionHandler(StorageException.class)

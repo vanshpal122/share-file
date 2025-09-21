@@ -11,12 +11,12 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/receive"); //to enable a simple memory-based message broker to carry the msgs back to the client on destinations prefixed with /receive
+        config.enableSimpleBroker("/topic"); //to enable a simple memory-based message broker to carry the msgs back to the client on destinations prefixed with /receive
         config.setApplicationDestinationPrefixes("/app"); //prefix for msgs bound for methods annotated with @MessageMapping
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/send_receive_channel").setAllowedOriginPatterns("*");
+        registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
     }
 }
