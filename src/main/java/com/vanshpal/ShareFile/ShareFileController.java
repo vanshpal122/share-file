@@ -177,8 +177,10 @@ public class ShareFileController {
     }
 
     @GetMapping("/ping")
-    public ResponseEntity<String> ping() {
-        return ResponseEntity.ok("Server is online");
+    public ResponseEntity<Map<String, String>> ping() {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Server is online");
+        return ResponseEntity.ok(response);
     }
 
     @ExceptionHandler(StorageException.class)

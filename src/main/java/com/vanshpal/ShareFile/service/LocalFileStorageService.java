@@ -72,7 +72,7 @@ public class LocalFileStorageService {
             throw new StorageException("Invalid Chunk Directory");
         }
 
-        File[] chunkFiles = dir.listFiles((_, name) -> name.matches("\\d+"));  // Only files named as integers
+        File[] chunkFiles = dir.listFiles((x, name) -> name.matches("\\d+"));  // Only files named as integers
 
         if (chunkFiles == null) {
             throw new StorageException("Failed to list chunks in directory");
