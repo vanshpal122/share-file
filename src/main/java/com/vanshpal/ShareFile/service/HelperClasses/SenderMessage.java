@@ -7,5 +7,4 @@ public record SenderMessage(
         String senderName,
         List<FileMetadata> listOfFiles
 ) {
-
 }

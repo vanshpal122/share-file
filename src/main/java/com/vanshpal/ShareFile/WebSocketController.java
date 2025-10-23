@@ -1,6 +1,7 @@
 package com.vanshpal.ShareFile;
 
 import com.vanshpal.ShareFile.service.HelperClasses.SenderMessage;
+import com.vanshpal.ShareFile.service.HelperClasses.User;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
@@ -12,5 +13,10 @@ public class WebSocketController {
     public SenderMessage senderMsg(SenderMessage senderMsg) {
         System.out.println(senderMsg.toString());
         return senderMsg;
+    }
+
+    @MessageMapping("/receive")
+    public void receiveMsg(User receiver) {
+
     }
 }
