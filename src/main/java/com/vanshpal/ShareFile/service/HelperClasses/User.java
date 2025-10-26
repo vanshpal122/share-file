@@ -1,6 +1,6 @@
 package com.vanshpal.ShareFile.service.HelperClasses;
 
-public record User(String sessionId, String username) {
+public record User(String sessionId, String userName) {
 
     @Override
     public boolean equals(Object o) {
