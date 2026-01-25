@@ -55,7 +55,7 @@ public class StompEventListener {
 
     private void broadCastSubscribers(String topic) {
         Set<User> subscribers = getSubscribers(topic);
-        simpMessagingTemplate.convertAndSend("topic/getReceivers", subscribers);
+        simpMessagingTemplate.convertAndSend("/topic/getReceivers", subscribers);
     }
 
     public Set<User> getSubscribers(String topic) {
