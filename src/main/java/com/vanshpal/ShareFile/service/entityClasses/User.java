@@ -1,17 +1,17 @@
-package com.vanshpal.ShareFile.service.HelperClasses;
+package com.vanshpal.ShareFile.service.entityClasses;
 
-public record User(String sessionId, String username) {
+public record User(String userId, String username) {
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof User that)) return false;
-        return sessionId.equals(that.sessionId);
+        return userId.equals(that.userId);
     }
 
     @Override
     public int hashCode() {
-        return sessionId.hashCode();
+        return userId.hashCode();
     }
 }
 

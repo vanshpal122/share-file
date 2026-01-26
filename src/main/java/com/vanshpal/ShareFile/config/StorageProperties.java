@@ -1,4 +1,4 @@
-package com.vanshpal.ShareFile.service;
+package com.vanshpal.ShareFile.config;
 
 import lombok.Getter;
 import lombok.Setter;

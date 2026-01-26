@@ -1,10 +1,10 @@
-package com.vanshpal.ShareFile.service;
+package com.vanshpal.ShareFile.service.storageService;
 
 
-import com.vanshpal.ShareFile.FileShareRepository;
-import com.vanshpal.ShareFile.service.Exceptions.StorageException;
-import com.vanshpal.ShareFile.service.HelperClasses.FileChunk;
-import com.vanshpal.ShareFile.service.HelperClasses.StoredFile;
+import com.vanshpal.ShareFile.exceptions.StorageException;
+import com.vanshpal.ShareFile.service.LocalFileStorageService;
+import com.vanshpal.ShareFile.service.entityClasses.FileChunk;
+import com.vanshpal.ShareFile.service.entityClasses.StoredFile;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

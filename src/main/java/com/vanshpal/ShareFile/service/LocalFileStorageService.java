@@ -1,8 +1,9 @@
 package com.vanshpal.ShareFile.service;
 
-import com.vanshpal.ShareFile.service.Exceptions.StorageException;
-import com.vanshpal.ShareFile.service.HelperClasses.FileChunk;
-import com.vanshpal.ShareFile.service.HelperClasses.StoredFile;
+import com.vanshpal.ShareFile.config.StorageProperties;
+import com.vanshpal.ShareFile.exceptions.StorageException;
+import com.vanshpal.ShareFile.service.entityClasses.FileChunk;
+import com.vanshpal.ShareFile.service.entityClasses.StoredFile;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -52,70 +53,6 @@ public class LocalFileStorageService {
 
         Files.copy(fileStream, newFile, StandardCopyOption.REPLACE_EXISTING);
         return new FileChunk(chunkIndex, fileId);
-    }
-
-    public StoredFile mergeFileChunks(String fileName, String fileId, int totalNumberOfChunks) throws StorageException {
-        StoredFile newFile = new StoredFile(fileName, "", null, 0L, null);
-        //Creating file
-        if (!isValidFileId(fileId)) throw new StorageException("Invalid file ID");
-        String newFileName = fileId + extractFileExtension(fileName);
-        Path newFilePath = this.mainPath.resolve(newFileName).normalize().toAbsolutePath();
-        if (!newFilePath.startsWith(this.mainPath.normalize().toAbsolutePath())) {
-            throw new StorageException("New Files must be within the corresponding device directory");
-        }
-        newFile.setStoredFileName(newFileName);
-        //Accessing corresponding chunk directory
-        Path dirPath = tempPath.resolve(fileId);
-
-        File dir = dirPath.toFile();
-        if (!dir.exists() || !dir.isDirectory()) {
-            throw new StorageException("Invalid Chunk Directory");
-        }
-
-        File[] chunkFiles = dir.listFiles((x, name) -> name.matches("\\d+"));  // Only files named as integers
-
-        if (chunkFiles == null) {
-            throw new StorageException("Failed to list chunks in directory");
-        }
-
-        int actualChunkCount = chunkFiles.length;
-
-        if (!(actualChunkCount == totalNumberOfChunks)) {
-            throw new StorageException("Invalid Number of Chunks");
-        }
-        Arrays.sort(chunkFiles, Comparator.comparingInt(f -> Integer.parseInt(f.getName())));
-
-
-        try {
-            Files.createDirectories(newFilePath.getParent());
-        } catch (IOException e) {
-            throw new StorageException("Could not create directory");
-        }
-        //Actual Merging
-        try (BufferedOutputStream mergedOut = new BufferedOutputStream(Files.newOutputStream(newFilePath))) {
-            for (File chunk : chunkFiles) {
-                try (BufferedInputStream chunkIn = new BufferedInputStream(new FileInputStream(chunk))) {
-                    byte[] buffer = new byte[8192];
-                    int bytesRead;
-                    while ((bytesRead = chunkIn.read(buffer)) != -1) {
-                        mergedOut.write(buffer, 0, bytesRead);
-                    }
-
-                } catch (IOException e) {
-                    throw new StorageException("Error while writing chunk" + chunk.getName() + "of file with id" + fileId, e);
-                }
-            }
-            deleteDirectory(this.tempPath.resolve(Paths.get(fileId)));
-        } catch (IOException e) {
-            throw new StorageException("Error while merging chunks: " + fileId, e);
-        }
-        try {
-            newFile.setFileSize(Files.size(newFilePath));
-            newFile.setFileType(Files.probeContentType(newFilePath));
-        } catch (IOException e) {
-            throw new StorageException("Error determining size of file");
-        }
-        return newFile;
     }
 
     public Resource getFile(Path filePath) {

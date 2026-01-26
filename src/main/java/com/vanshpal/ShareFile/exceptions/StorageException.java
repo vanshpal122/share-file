@@ -1,4 +1,4 @@
-package com.vanshpal.ShareFile.service.Exceptions;
+package com.vanshpal.ShareFile.exceptions;
 
 public class StorageException extends RuntimeException {
 

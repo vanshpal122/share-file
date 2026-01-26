@@ -1,4 +1,4 @@
-package com.vanshpal.ShareFile.service.HelperClasses;
+package com.vanshpal.ShareFile.service.entityClasses;
 
 
 import lombok.AllArgsConstructor;
